@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
-import Json.Decode exposing (Decoder, field, string)
+import Json.Decode exposing (Decoder, field, int, map2, string)
 
 
 main =
@@ -17,10 +17,16 @@ main =
         }
 
 
+type alias Person =
+    { name : String
+    , age : Int
+    }
+
+
 type Model
     = Failure
     | Loading
-    | Success String
+    | Success Person
 
 
 init : () -> ( Model, Cmd Msg )
@@ -30,7 +36,7 @@ init _ =
 
 type Msg
     = MorePlease
-    | GotPerson (Result Http.Error String)
+    | GotPerson (Result Http.Error Person)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -76,7 +82,7 @@ viewPerson model =
         Success person ->
             div []
                 [ button [ onClick MorePlease, style "display" "block" ] [ text "More Please!" ]
-                , text person
+                , text person.name
                 ]
 
 
@@ -88,6 +94,8 @@ getPerson =
         }
 
 
-personDecoder : Decoder String
+personDecoder : Decoder Person
 personDecoder =
-    field "name" string
+    map2 Person
+        (field "name" string)
+        (field "age" int)
