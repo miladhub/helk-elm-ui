@@ -1,11 +1,11 @@
-module Main exposing (Model(..), Msg(..), getPerson, init, main, personDecoder, subscriptions, update, view, viewPerson)
+module Main exposing (Model(..), Msg(..), getPeople, init, main, personDecoder, subscriptions, update, view, viewPeople)
 
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
-import Json.Decode exposing (Decoder, field, int, map2, string)
+import Json.Decode exposing (Decoder, field, int, list, map2, string)
 
 
 main =
@@ -26,29 +26,29 @@ type alias Person =
 type Model
     = Failure
     | Loading
-    | Success Person
+    | Success (List Person)
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Loading, getPerson )
+    ( Loading, getPeople )
 
 
 type Msg
-    = MorePlease
-    | GotPerson (Result Http.Error Person)
+    = Reload
+    | GotPeople (Result Http.Error (List Person))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        MorePlease ->
-            ( Loading, getPerson )
+        Reload ->
+            ( Loading, getPeople )
 
-        GotPerson result ->
+        GotPeople result ->
             case result of
-                Ok person ->
-                    ( Success person, Cmd.none )
+                Ok people ->
+                    ( Success people, Cmd.none )
 
                 Err _ ->
                     ( Failure, Cmd.none )
@@ -63,34 +63,39 @@ view : Model -> Html Msg
 view model =
     div []
         [ h2 [] [ text "Helk" ]
-        , viewPerson model
+        , viewPeople model
         ]
 
 
-viewPerson : Model -> Html Msg
-viewPerson model =
+viewPeople : Model -> Html Msg
+viewPeople model =
     case model of
         Failure ->
             div []
-                [ text "I could not load the person for some reason. "
-                , button [ onClick MorePlease ] [ text "Try Again!" ]
+                [ text "I could not load people for some reason. "
+                , button [ onClick Reload ] [ text "Reload" ]
                 ]
 
         Loading ->
             text "Loading..."
 
-        Success person ->
+        Success people ->
             div []
-                [ button [ onClick MorePlease, style "display" "block" ] [ text "More Please!" ]
-                , text person.name
+                [ button [ onClick Reload, style "display" "block" ] [ text "Reload" ]
+                , showPeople people
                 ]
 
 
-getPerson : Cmd Msg
-getPerson =
+showPeople : List Person -> Html a
+showPeople people =
+    text (Debug.toString people)
+
+
+getPeople : Cmd Msg
+getPeople =
     Http.get
-        { url = "http://localhost:9176/people/bar"
-        , expect = Http.expectJson GotPerson personDecoder
+        { url = "http://localhost:9176/people"
+        , expect = Http.expectJson GotPeople (list personDecoder)
         }
 
 
