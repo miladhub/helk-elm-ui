@@ -37,6 +37,8 @@ init _ =
 type Msg
     = Reload
     | GotPeople (Result Http.Error (List Person))
+    | Delete String
+    | Deleted (Result Http.Error ())
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -52,6 +54,33 @@ update msg model =
 
                 Err _ ->
                     ( Failure, Cmd.none )
+
+        Delete name ->
+            ( Loading, deletePerson name )
+
+        Deleted _ ->
+            ( Loading, getPeople )
+
+
+getPeople : Cmd Msg
+getPeople =
+    Http.get
+        { url = "http://localhost:9176/people"
+        , expect = Http.expectJson GotPeople (list personDecoder)
+        }
+
+
+deletePerson : String -> Cmd Msg
+deletePerson name =
+    Http.request
+        { method = "DELETE"
+        , headers = []
+        , url = "http://localhost:9176/people/" ++ name
+        , body = Http.emptyBody
+        , expect = Http.expectWhatever Deleted
+        , timeout = Nothing
+        , tracker = Nothing
+        }
 
 
 subscriptions : Model -> Sub Msg
@@ -86,7 +115,7 @@ viewPeople model =
                 ]
 
 
-showPeople : List Person -> Html a
+showPeople : List Person -> Html Msg
 showPeople people =
     ul []
         (List.map
@@ -95,17 +124,12 @@ showPeople people =
         )
 
 
-showPerson : Person -> Html a
+showPerson : Person -> Html Msg
 showPerson person =
-    li [] [ text person.name ]
-
-
-getPeople : Cmd Msg
-getPeople =
-    Http.get
-        { url = "http://localhost:9176/people"
-        , expect = Http.expectJson GotPeople (list personDecoder)
-        }
+    li []
+        [ text (person.name ++ ", age " ++ String.fromInt person.age)
+        , button [ onClick (Delete person.name), style "display" "block" ] [ text "Delete" ]
+        ]
 
 
 personDecoder : Decoder Person
