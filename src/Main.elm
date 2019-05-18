@@ -88,7 +88,16 @@ viewPeople model =
 
 showPeople : List Person -> Html a
 showPeople people =
-    text (Debug.toString people)
+    ul []
+        (List.map
+            showPerson
+            people
+        )
+
+
+showPerson : Person -> Html a
+showPerson person =
+    li [] [ text person.name ]
 
 
 getPeople : Cmd Msg
