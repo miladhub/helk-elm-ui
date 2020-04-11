@@ -1,10 +1,10 @@
 module Main exposing (Model(..), Msg(..), getPeople, init, main, personDecoder, subscriptions, update, view, viewPeople)
 
-import Browser
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-import Http
+import Browser exposing (element)
+import Html exposing (Html, li, text, button, ul, div, h2)
+import Html.Attributes exposing (style)
+import Html.Events exposing (onClick)
+import Http exposing (Error)
 import Json.Decode exposing (Decoder, field, int, list, map2, string)
 
 
